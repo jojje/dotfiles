@@ -1,0 +1,11 @@
+# Source this from whatever profile is being used for the shell
+
+# Make world readable files human readable as well
+export LS_COLORS="$LS_COLORS:ow=34;40"
+
+# Custom PATH
+export PATH=$PATH:$HOME/bin
+
+# Custom prompt
+# PS1='\[\033[38;5;136m\]\h \[\033[38;5;172m\]\w\[\033[36m\]$(__git_ps1)\[\033[0m\]\n$ '
+PS1='\[\033[38;5;136m\]\h \[\033[38;5;142m\]\w\[\033[36m\]$(__git_ps1)\[\033[0m\]\n$ '

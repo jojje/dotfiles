@@ -1,0 +1,49 @@
+# Shell
+alias ll='ls -l'
+alias cache-hits='hits=$(sudo lvs -o cache_read_hits,cache_read_misses dockerdev-vg/root); echo "$hits" |tail -1| awk "{printf(\"\n  Hit ratio: %.0f%%\n\n\", 100*(\$1 / (\$1 + \$2)))}"; echo "$hits"'
+
+# debian/ubuntu package mgmt
+if [ -e /etc/debian_version ]; then
+  alias acs='apt-cache show'
+  alias ac='apt-cache search'
+  alias agi='sudo apt-get install'
+fi
+
+# version control dot-files
+alias config='git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+
+
+# Docker
+alias d=docker
+alias dc=docker-compose
+alias dm=docker-machine
+alias dri='docker run --rm -ti'
+alias ds='docker stats $(docker ps --format={{.Names}})'
+alias dv='docker volume ls -qf dangling=true|xargs docker volume rm'
+alias di='docker images'
+alias dp='docker ps'
+alias dstats='docker stats $(docker ps --format "{{.Names}}")'
+
+# remove all temporary unused layers
+alias dnone='docker ps --format "{{.Names}}" -f status=exited| grep -v vpn_vpn |xargs docker rm; docker images -f dangling=true -q|xargs docker rmi; docker volume ls -qf dangling=true|xargs docker volume rm'
+
+## more readable docker history
+dhist() { docker history --no-trunc $1 | cut -c95- | perl -ne 's/  +/ /g; s/^\/bin\/sh -c #\(nop\) //; s/^\/bin\/sh -c/RUN/; print;'| tac ;}
+
+
+# Git
+alias st='git status --short'
+alias gd='git diff'
+alias gbr='git branch'
+alias gl='git log'
+
+
+# tmux
+alias tmux='TERM=xterm-256color tmux'
+alias tma='TERM=xterm-256color tmux attach'
+
+# Kubernetes
+alias k='kubectl'
+alias ks='kubectl -n kube-system'
+alias kis='kubectl -n istio-system'
+

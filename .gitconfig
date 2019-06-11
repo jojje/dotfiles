@@ -1,0 +1,18 @@
+[user]
+        name = Jonas Tingeborn
+        email = tinjon@gmail.com
+[color]
+        diff = auto
+        status = auto
+        branch = auto
+        interactive = auto
+[alias]
+        st = status
+        di = diff
+        co = checkout
+        ci = commit
+        br = branch
+[push]
+        default = upstream
+        followTags = true
+
