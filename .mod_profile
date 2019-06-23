@@ -1,14 +1,105 @@
 # Source this from whatever profile is being used for the shell
 
-# Make world readable files human readable as well
-export LS_COLORS="$LS_COLORS:ow=34;40"
-
-# Custom PATH
-export PATH=$PATH:$HOME/bin
-
-# Custom prompt
-# PS1='\[\033[38;5;136m\]\h \[\033[38;5;172m\]\w\[\033[36m\]$(__git_ps1)\[\033[0m\]\n$ '
-PS1='\[\033[38;5;136m\]\h \[\033[38;5;142m\]\w\[\033[36m\]$(__git_ps1)\[\033[0m\]\n$ '
+#############################################################################
+# Python
+#############################################################################
+# pyenv configs, for simplifying install of different python versions
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH:$HOME/.local/bin"
 
 # Disable prefixing the prompt with the venv python version!
 export VIRTUAL_ENV_DISABLE_PROMPT=1
+
+# Default python version for shell
+PYVER=3.7.3
+PYVENV="${HOME}/.venvs/${PYVER}"
+
+# Activate venv if present
+if [ -d "${PYVENV}" ]; then
+  source "${PYVENV}/bin/activate"
+else
+  # Easy installation of specific python version
+  install_python() {
+    PYVENV="${HOME}/.venvs/${PYVER}"
+    echo -n "Install Python ${PYVER} via pyenv into virtualenv"
+
+    if [[ "${OSTYPE}" == "darwin"* ]]; then
+      cat <<-EOF
+	Run the following commands:
+ 	  brew install pyenv
+	  pyenv install ${PYVER}
+	  pip install virtualenv
+	  virtualenv -p "$(pyenv root)/versions/${PYVER}/bin/python" "${PYVENV}"
+	EOF
+    else # assume debian-ish linux
+      run(){ echo "$@"; "$@" ;}
+      has_command(){ command -v $1 >/dev/null ;}
+      missing_packages(){ for pkg in $*;do dpkg -s "${pkg}" 2>/dev/null | awk '/^Status:/{print}'|grep "install ok installed" > /dev/null || echo ${pkg};done ;}
+      local missing_cmds=$(missing_packages curl git gcc make python3)
+      local missing_libs=$(missing_packages zlib1g-dev libffi-dev libssl-dev libbz2-dev libncursesw5-dev libgdbm-dev liblzma-dev libsqlite3-dev tk-dev uuid-dev libreadline-dev)
+
+      has_command sudo || {
+        echo "Installation of python requires 'sudo' in order to install dependent packages. Please install sudo as root"
+        return 0
+      }
+
+      # Install full packages
+      [ -n "${missing_cmds}" ] && \
+        run sudo apt-get install -y ${missing_cmds}
+
+      # Install libs needed to compile python
+      [ -n "${missing_libs}" ] && \
+        run sudo apt-get install -y --no-install-recommends ${missing_libs}
+
+      # Install virtualenv if needed
+      has_command pip || {
+        run curl -LO  https://bootstrap.pypa.io/get-pip.py
+        run python3 get-pip.py --user
+        run rm get-pip.py
+      }
+      has_command virtualenv || \
+        run pip install --user virtualenv
+
+      # Install pyenv if needed
+      [ -d "${HOME}/.pyenv" ] || \
+        run git clone https://github.com/pyenv/pyenv.git ${HOME}/.pyenv
+      [ -d "${HOME}/.pyenv/versions/${PYVER}" ] || \
+        run pyenv install ${PYVER}
+
+      # Create the venv
+      [ -d "${PYVENV}" ] || {
+        run virtualenv -p "${HOME}/.pyenv/versions/${PYVER}/bin/python" "${PYVENV}"
+        run source "${PYVENV}/bin/activate"
+      }
+
+      unset -f run
+      unset -f has_command
+      unset -f missing_packages
+    fi
+  }
+  echo "Python ${PYVER} missing: Install with: install_python"
+fi
+
+#############################################################################
+# PROMPT
+#############################################################################
+# Make world readable files human readable as well
+export LS_COLORS="$LS_COLORS:ow=34;40"
+
+# Install gitprompt if needed, and activate
+[ -f ~/.git-prompt.sh ] || {
+  command -v curl >/dev/null || sudo apt-get install -y curl
+  curl -sLo ~/.git-prompt.sh \
+  'https://raw.githubusercontent.com/git/git/8dca754b1e874719a732bc9ab7b0e14b21b1bc10/contrib/completion/git-prompt.sh'
+}
+source ~/.git-prompt.sh
+
+# Custom prompt
+PS1='\[\033[38;5;136m\]\h \[\033[38;5;142m\]\w\[\033[36m\]$(__git_ps1)\[\033[0m\]\n$ '
+
+#############################################################################
+# MISC
+#############################################################################
+# Custom PATH
+export PATH=$PATH:$HOME/bin
+
